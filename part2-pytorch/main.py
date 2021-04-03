@@ -1,4 +1,3 @@
-import yaml
 import argparse
 import time
 import copy
@@ -6,20 +5,16 @@ import copy
 import numpy as np
 import torch
 import torchvision
-from data import Cifar, IMBALANCECIFAR10
 
 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 import torchvision.transforms as transforms
 
-from models import TwoLayerNet, VanillaCNN, MyModel, resnet32
-from losses import FocalLoss, reweight
+from replays_dataset import HaxballDemoDataset
 
-parser = argparse.ArgumentParser(description='CS7643 Assignment-2 Part 2')
-parser.add_argument('--config', default='./config.yaml')
-
+from .models import MyModel
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -71,6 +66,7 @@ def train(epoch, data_loader, model, optimizer, criterion):
         #############################################################################
         optimizer.zero_grad()
         out = model(data)
+
         loss = criterion(out, target)
         loss.backward()
         optimizer.step()
@@ -155,9 +151,13 @@ def adjust_learning_rate(optimizer, epoch, args):
         param_group['lr'] = lr
 
 def main():
+
+    dataset = replays_dataset("sample_preprocessed")
+
+    train_dataset, test_dataset = random_split(dataset, [len(dataset) * .8, 1 - len(dataset)*.8])
+
     train_loader = DataLoader(train_dataset, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=100, shuffle=False, num_workers=2)
+    test_loader = torch.utils.data.DataLoader(test_dataset, shuffle=False)
 
     model = MyModel()
     print(model)
@@ -165,7 +165,7 @@ def main():
     if torch.cuda.is_available():
         model = model.cuda()
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
 
     optimizer = torch.optim.SGD(model.parameters())
     best = 0.0
