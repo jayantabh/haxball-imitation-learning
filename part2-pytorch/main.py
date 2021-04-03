@@ -12,7 +12,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
 import torchvision.transforms as transforms
 
-from replays_dataset import HaxballDemoDataset
+from .replays_dataset import HaxballDemoDataset
 
 from .models import MyModel
 
@@ -152,7 +152,7 @@ def adjust_learning_rate(optimizer, epoch, args):
 
 def main():
 
-    dataset = replays_dataset("sample_preprocessed")
+    dataset = HaxballDemoDataset("sample_preprocessed")
 
     train_dataset, test_dataset = random_split(dataset, [len(dataset) * .8, 1 - len(dataset)*.8])
 
