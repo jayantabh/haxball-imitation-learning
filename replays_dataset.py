@@ -16,12 +16,9 @@ class HaxballDemoDataset(Dataset):
         self.game_states = []
         self.root_dir = bin_file_path
 
-        i = 0
         for root, dirs, files in os.walk(bin_file_path):
             for name in files:
                 if name.split('.')[-1] == "bin":
-                    i += 1
-                    print(i)
                     with open(os.path.join(self.root_dir, name), 'rb') as f:
                         file_content = f.read()
                         _, states = Replay(file_content)
@@ -30,9 +27,6 @@ class HaxballDemoDataset(Dataset):
                             if state.players is not None and len(state.players) == 2:
                                 self.game_states.append((state, 0))
                                 self.game_states.append((state, 1))
-
-                        break
-            break
 
     def __len__(self):
         return len(self.game_states)
