@@ -7,7 +7,7 @@ from collections import defaultdict
 
 
 def convert_to_bin(path: str, target_path: str):
-    return os.system(f"nodejs haxball/replay.js convert \"{path}\" \"{target_path}\"")
+    return os.system(f"node haxball/replay.js convert \"{path}\" \"{target_path}\"")
 
 
 def extract_metavar(path: str):
