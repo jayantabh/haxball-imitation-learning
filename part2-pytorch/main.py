@@ -2,15 +2,9 @@ import argparse
 import time
 import copy
 
-import numpy as np
-import torch
-import torchvision
-
-
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
-import torchvision.transforms as transforms
 
 from .replays_dataset import HaxballDemoDataset
 
