@@ -54,7 +54,7 @@ class HaxballDemoDataset(Dataset):
 
         sample['output'] = torch.tensor(our_player.input)
 
-        return (sample['input'].float(), sample['output'].float())
+        return sample['input'].float(), sample['output'].float()
 
 
 if __name__ == "__main__":

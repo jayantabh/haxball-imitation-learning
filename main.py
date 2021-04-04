@@ -106,6 +106,8 @@ def validate(epoch, val_loader, model, criterion):
         #                              END OF YOUR CODE                             #
         #############################################################################
 
+        out = out > 0.5
+
         batch_acc = accuracy(out, target)
 
         # update confusion matrix
@@ -119,8 +121,8 @@ def validate(epoch, val_loader, model, criterion):
         iter_time.update(time.time() - start)
         if idx % 10 == 0:
             print(('Epoch: [{0}][{1}/{2}]\t'
-               'Time {iter_time.val:.3f} ({iter_time.avg:.3f})\t')
-               .format(epoch, idx, len(val_loader), iter_time=iter_time, loss=losses, top1=acc))
+                   'Time {iter_time.val:.3f} ({iter_time.avg:.3f})\t')
+                  .format(epoch, idx, len(val_loader), iter_time=iter_time, loss=losses, top1=acc))
     cm = cm / cm.sum(1)
     per_cls_acc = cm.diag().detach().numpy().tolist()
     for i, acc_i in enumerate(per_cls_acc):
@@ -158,7 +160,7 @@ def main():
     if torch.cuda.is_available():
         model = model.cuda()
 
-    criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.BCELoss()
 
     optimizer = torch.optim.SGD(model.parameters(), lr=.01)
     best = 0.0
