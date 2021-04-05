@@ -8,9 +8,13 @@ class MyModel(nn.Module):
         # TODO: Initialize the network weights                                      #
         #############################################################################
         self.model = nn.Sequential(
-            nn.Linear(12, 24),
-            nn.Sigmoid(),
-            nn.Linear(24, 5),
+            nn.Linear(12, 100),
+            nn.LeakyReLU(),
+            nn.Linear(100, 100),
+            nn.LeakyReLU(),
+            nn.Linear(100, 100),
+            nn.LeakyReLU(),
+            nn.Linear(100, 5),
             nn.Sigmoid(),
         )
         #############################################################################

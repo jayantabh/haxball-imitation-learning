@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
 
-from replays_dataset import HaxballDemoDataset
+from replays_dataset_filter import HaxballDemoDataset
 
 from models import MyModel
 
@@ -28,13 +28,12 @@ class AverageMeter(object):
 
 def accuracy(output, target):
     """Computes the precision@k for the specified values of k"""
+    num_actions = 5.0
     batch_size = target.shape[0]
 
-    _, pred = torch.max(output, dim=-1)
+    correct = output.eq(target).sum() * 1.0
 
-    correct = pred.eq(target).sum() * 1.0
-
-    acc = correct / batch_size
+    acc = correct / (batch_size * num_actions)
 
     return acc
 
@@ -86,7 +85,7 @@ def validate(epoch, val_loader, model, criterion):
     losses = AverageMeter()
     acc = AverageMeter()
 
-    num_class = 10
+    num_class = 2
     cm = torch.zeros(num_class, num_class)
     # evaluation loop
     for idx, (data, target) in enumerate(val_loader):
@@ -106,14 +105,16 @@ def validate(epoch, val_loader, model, criterion):
         #                              END OF YOUR CODE                             #
         #############################################################################
 
-        out = out > 0.5
+        out = (out > 0.5).type(torch.int)
 
         batch_acc = accuracy(out, target)
 
-        # update confusion matrix
-        _, preds = torch.max(out, 1)
-        for t, p in zip(target.view(-1), preds.view(-1)):
-            cm[t.long(), p.long()] += 1
+        # # update confusion matrix
+        # _, preds = torch.max(out, 1)
+        #
+        # print(target, preds)
+        # for t, p in zip(target.view(-1), preds.view(-1)):
+        #     cm[t.long(), p.long()] += 1
 
         losses.update(loss, out.shape[0])
         acc.update(batch_acc, out.shape[0])
@@ -123,12 +124,14 @@ def validate(epoch, val_loader, model, criterion):
             print(('Epoch: [{0}][{1}/{2}]\t'
                    'Time {iter_time.val:.3f} ({iter_time.avg:.3f})\t')
                   .format(epoch, idx, len(val_loader), iter_time=iter_time, loss=losses, top1=acc))
-    cm = cm / cm.sum(1)
-    per_cls_acc = cm.diag().detach().numpy().tolist()
-    for i, acc_i in enumerate(per_cls_acc):
-        print("Accuracy of Class {}: {:.4f}".format(i, acc_i))
+    # cm = cm / cm.sum(1)
+    # per_cls_acc = cm.diag().detach().numpy().tolist()
+    # for i, acc_i in enumerate(per_cls_acc):
+    #     print("Accuracy of Class {}: {:.4f}".format(i, acc_i))
+    #
+    # print("* Prec @1: {top1.avg:.4f}".format(top1=acc))
 
-    print("* Prec @1: {top1.avg:.4f}".format(top1=acc))
+    print(f"Accuracy: {acc.avg.item():.2f}")
     return acc.avg, cm
 
 
@@ -162,12 +165,13 @@ def main():
 
     criterion = nn.BCELoss()
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=.01)
+    learning_rate = 1e-4
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     best = 0.0
     best_cm = None
     best_model = None
 
-    epochs = 10
+    epochs = 30
     for epoch in range(epochs):
         # train loop
         train(epoch, train_loader, model, optimizer, criterion)
