@@ -1,14 +1,19 @@
 import argparse
 import haxball.async_common as async_common
 
-from bots.bot_example import ChasingBot
-from bots.my_model_bot import MyModelBot
-
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--channel", type=int, default=0, help="Different agents must be placed on different communication channels.")
+	parser.add_argument("--bot", type=str, help="Must specify --bot")
+	parser.add_argument("--name", type=str, help="Must specify saved model name")
 	args = parser.parse_args()
 	try:
-		async_common.run(MyModelBot(str(args.channel)).play())
+		if args.bot == "Basic":
+			from bots.BasicBot import BasicBot
+			async_common.run(BasicBot(str(args.channel), args.name).play())
+		elif args.bot == "DistBot":
+			from bots.DistBot import DistBot
+			async_common.run(DistBot(str(args.channel), args.name).play())
+
 	except KeyboardInterrupt:
 		pass
