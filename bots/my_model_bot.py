@@ -3,38 +3,53 @@ import torch
 import os
 
 from bots import interactive
-from models import MyModel
+from models import DummyModel
+
 
 class MyModelBot(interactive.Interactive):
+    def __init__(self, channel_id):
+        super().__init__(channel_id)
 
-  def __init__(self, channel_id):
-    super().__init__(channel_id)
+        # Load pre-trained model and set-up the bot
+        self.model = DummyModel()
 
-    # Load pre-trained model and set-up the bot
-    self.model = MyModel()
-    path = os.path.join( os.getcwd(), 'checkpoints', 'model.pth' )
-    self.model.load_state_dict(torch.load(path))
-    self.model.eval()
+    def onUpdate(self):
+        if self.player and len(self.game.players) == 6:
+            # convert game state to tensor
+            # tensor must be same format as how network was trained
+            num_actions = 5
+            our_team = self.player.team
 
-  def onUpdate(self):
-    if self.player and len(self.game.players) == 2:
-      # convert game state to tensor
-      # tensor must be same format as how network was trained
+            # forming input only works for two players currently
+            our_players = [p for p in self.game.players if p.team == our_team]
+            opp_players = [p for p in self.game.players if p.team != our_team]
 
-      # forming input only works for two players currently
-      state = [self.player.disc.x, self.player.disc.y, self.player.disc.vx, self.player.disc.vy]
-      for player in self.game.players:
-        if player.id != self.player.id:
-          state.extend([player.disc.x, player.disc.y, player.disc.vx, player.disc.vy])
+            our_players.sort(key=lambda p: (p.disc.x, p.disc.y))
+            opp_players.sort(key=lambda p: (p.disc.x, p.disc.y))
 
-      state.extend([self.game.ball.x, self.game.ball.y, self.game.ball.vx, self.game.ball.vy])
+            player_idx = 0
+            for i, p in enumerate(our_players):
+                if p.id == self.player.id:
+                    player_idx = i
+                    break
 
-      state_tensor = torch.tensor(state)
+            state = []
+            for player in our_players:
+                state.extend([player.disc.x, player.disc.y, player.disc.vx, player.disc.vy])
 
-      # get output for model
-      actions = self.model(state_tensor)
-      actions = (actions > 0.5).tolist()
-      
-      # send input actions
-      inputs = [replay.Input(1 << idx) for idx,x in enumerate(actions) if x != 0]
-      self.setInput(*inputs)
+            for player in opp_players:
+                state.extend([player.disc.x, player.disc.y, player.disc.vx, player.disc.vy])
+
+            state.extend([self.game.ball.x, self.game.ball.y, self.game.ball.vx, self.game.ball.vy])
+
+            state_tensor = torch.tensor(state)
+
+            # get output for model
+            actions = self.model(state_tensor)
+            actions = (actions > 0.5).tolist()
+
+            player_actions = actions[player_idx * num_actions: (player_idx + 1) * num_actions]
+
+            # send input actions
+            inputs = [replay.Input(1 << idx) for idx, x in enumerate(player_actions) if x != 0]
+            self.setInput(*inputs)
