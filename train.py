@@ -24,9 +24,9 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
-def accuracy(output, target):
+def accuracy(output, target, num_actions):
     """Computes the precision@k for the specified values of k"""
-    num_actions = 5.0
+    num_actions *= 1.0
     batch_size = target.shape[0]
 
     correct = output.eq(target).sum() * 1.0
@@ -63,19 +63,10 @@ def train(epoch, data_loader, model, optimizer, criterion):
         #                              END OF YOUR CODE                             #
         #############################################################################
 
-        batch_acc = accuracy(out, target)
+        batch_acc = accuracy(out, target, len(target))
 
         losses.update(loss, out.shape[0])
         acc.update(batch_acc, out.shape[0])
-
-        # iter_time.update(time.time() - start)
-        # if idx % 10 == 0:
-        #     print(('Epoch: [{0}][{1}/{2}]\t'
-        #            'Time {iter_time.val:.3f} ({iter_time.avg:.3f})\t'
-        #            'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-        #            'Prec @1 {top1.val:.4f} ({top1.avg:.4f})\t')
-        #            .format(epoch, idx, len(data_loader), iter_time=iter_time, loss=losses, top1=acc))
-
 
 def validate(epoch, val_loader, model, criterion):
     iter_time = AverageMeter()
@@ -101,7 +92,7 @@ def validate(epoch, val_loader, model, criterion):
 
         out = (out > 0.5).type(torch.int)
 
-        batch_acc = accuracy(out, target)
+        batch_acc = accuracy(out, target, len(target))
 
         losses.update(loss, out.shape[0])
         acc.update(batch_acc, out.shape[0])
@@ -127,7 +118,7 @@ def main(model, dataset, saved_model_path):
     train_dataset, test_dataset = random_split(dataset, [len(dataset) - len(dataset)//10, len(dataset)//10])
 
     train_loader = DataLoader(train_dataset, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(test_dataset, shuffle=False)
+    test_loader = DataLoader(test_dataset, shuffle=False)
 
     print(model)
 
@@ -171,16 +162,23 @@ if __name__ == '__main__':
     if args.model == "Basic":
         from models.BasicModel import BasicModel 
         model = BasicModel()        
-    elif args.model == "DistBot":
+    elif args.model == "Dist":
         from models.DistModel import DistModel
         model = DistModel()
+    elif args.model == "Basic3v3":
+        from models.Basic3v3 import Basic3v3
+        model = Basic3v3()
 
     if args.dataset == "BasicFiltered":
         from datasets.BasicFilteredDataset import BasicFilteredDataset
-        dataset = BasicFilteredDataset("sample_preprocessed")
+        my_dataset = BasicFilteredDataset("sample_preprocessed")
         
     elif args.dataset == "DistBot":
         from datasets.DistDataset import DistDataset
-        dataset = DistDataset("sample_preprocessed")
+        my_dataset = DistDataset("sample_preprocessed")
+    
+    elif args.dataset == "Basic3v3":
+        from datasets.Basic3v3 import Basic3v3
+        my_dataset = Basic3v3("sample_preprocessed")
 
-    main(model, dataset, saved_model_path)
+    main(model, my_dataset, saved_model_path)

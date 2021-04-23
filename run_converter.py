@@ -67,7 +67,7 @@ def convert_all(replays_path: str):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", type=str, default="replays/",
+    parser.add_argument("--path", type=str, default="replays/Good3v3s",
                         help="Folder with replays.")
     args = parser.parse_args()
 
