@@ -2,9 +2,10 @@ from __future__ import print_function, division
 import os
 import torch
 from torch.utils.data import Dataset, DataLoader
-from replay import Replay, State
+from replay import Replay, State, Team
 import random
 import math
+import datasets.dataset_utils as du
 
 class Basic3v3DC(Dataset):
     """Haxball Demonstrations dataset."""
@@ -33,39 +34,63 @@ class Basic3v3DC(Dataset):
                         if len(state.players) != 6:
                             continue
 
-                        our_players = state.players[:3]
-                        opp_players = state.players[3:]
+                        # add default state, team red
+                        self.add_states(state, Team.Red)
 
-                        our_players.sort(key=lambda p: (p.disc.x, p.disc.y))
-                        opp_players.sort(key=lambda p: (p.disc.x, p.disc.y))
+                        # add state flipped about x axis, team red
+                        self.add_states(du.flip_state(state, flip_x=True, flip_y=False), Team.Red)
 
-                        for i in range(len(our_players)):
-                            inputs = []
-                            player_ = []
-                            teammates_ = []
+                        # add state flipped about y axis, team blue
+                        self.add_states(du.flip_state(state, flip_x=False, flip_y=True), Team.Blue)
 
-                            for j, player in enumerate(our_players):
-                                if i == j:
-                                    player_.extend([player.disc.x, player.disc.y, player.disc.vx, player.disc.vy])
-                                else:
-                                    teammates_.extend([player.disc.x, player.disc.y, player.disc.vx, player.disc.vy])
+                        # add state flipped about x and y axis, team blue
+                        self.add_states(du.flip_state(state, flip_x=True, flip_y=True), Team.Blue)
+                        
 
-                            inputs.extend(player_)
-                            inputs.extend(teammates_)
+    def add_states(self, state, player_team):
+        our_players, opp_players = self.get_players(state, player_team)
 
-                            for player in opp_players:
-                                inputs.extend([player.disc.x, player.disc.y, player.disc.vx, player.disc.vy])
+        our_players.sort(key=lambda p: (p.disc.x, p.disc.y))
+        opp_players.sort(key=lambda p: (p.disc.x, p.disc.y))
 
-                            inputs.extend([state.ball.x, state.ball.y, state.ball.vx, state.ball.vy])
+        for i in range(len(our_players)):
+            inputs = []
+            player_ = []
+            teammates_ = []
 
-                            outputs = [*our_players[i].input]
+            for j, player in enumerate(our_players):
+                if i == j:
+                    player_.extend([player.disc.x, player.disc.y, player.disc.vx, player.disc.vy])
+                else:
+                    teammates_.extend([player.disc.x, player.disc.y, player.disc.vx, player.disc.vy])
 
-                            self.game_states.append(
-                                {
-                                    "inputs": inputs,
-                                    "outputs": outputs
-                                }
-                            )
+            inputs.extend(player_)
+            inputs.extend(teammates_)
+
+            for player in opp_players:
+                inputs.extend([player.disc.x, player.disc.y, player.disc.vx, player.disc.vy])
+
+            inputs.extend([state.ball.x, state.ball.y, state.ball.vx, state.ball.vy])
+
+            outputs = [*our_players[i].input]
+
+            self.game_states.append(
+                {
+                    "inputs": inputs,
+                    "outputs": outputs
+                }
+            )
+
+
+    def get_players(self, state, player_team):
+        our_team = []
+        opp_team = []
+        for i in range(len(state.players)):
+            if state.players[i].team == player_team:
+                our_team.append(state.players[i])
+            else:
+                opp_team.append(state.players[i])
+        return (our_team, opp_team)
 
     def __len__(self):
         return len(self.game_states)

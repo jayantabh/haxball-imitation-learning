@@ -3,7 +3,7 @@ import os
 import torch
 from torch.utils.data import Dataset, DataLoader
 from replay import Replay, State
-import dataset_utils as du
+import datasets.dataset_utils as du
 import random
 
 
@@ -32,12 +32,6 @@ class HaxballDemoDataset(Dataset):
 
                                 # add default state, team 0
                                 self.game_states.append((state, 0))
-
-                                print((state.players[0].disc.x, state.players[0].disc.y))
-                                temp = du.flip_state(state, flip_x=False, flip_y=True)
-                                print((temp.players[0].disc.x, temp.players[0].disc.y))
-                                print((state.players[0].disc.x, state.players[0].disc.y))
-                                print('-----------------')
 
                                 # add state flipped about x axis, team 0
                                 self.game_states.append((du.flip_state(state, flip_x=True, flip_y=False), 0))
