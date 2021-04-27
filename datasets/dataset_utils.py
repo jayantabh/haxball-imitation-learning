@@ -38,6 +38,16 @@ def filter_states(game_states):
 
     return processed_states
 
+def get_players(state, player_team):
+    our_team = []
+    opp_team = []
+    for i in range(len(state.players)):
+        if state.players[i].team == player_team:
+            our_team.append(state.players[i])
+        else:
+            opp_team.append(state.players[i])
+    return (our_team, opp_team)
+
 
 # Rotates postions and actions of players within given state, returns flipped state
 # Notes

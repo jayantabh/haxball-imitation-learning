@@ -2,9 +2,10 @@ from __future__ import print_function, division
 import os
 import torch
 from torch.utils.data import Dataset, DataLoader
-from replay import Replay, State
+from replay import Replay, State, Team
 import random
 import math
+import datasets.dataset_utils as du
 
 class Basic3v3(Dataset):
     """Haxball Demonstrations dataset."""
@@ -26,7 +27,49 @@ class Basic3v3(Dataset):
 
                         for state in states:
                             if state.players is not None and len(state.players) == 6:
-                                self.game_states.append(state)
+
+                                # add default state, team red
+                                self.add_states(state, Team.Red)
+
+                                # add state flipped about x axis, team red
+                                self.add_states(du.flip_state(state, flip_x=True, flip_y=False), Team.Red)
+
+                                # add state flipped about y axis, team blue
+                                self.add_states(du.flip_state(state, flip_x=False, flip_y=True), Team.Blue)
+
+                                # add state flipped about x and y axis, team blue
+                                self.add_states(du.flip_state(state, flip_x=True, flip_y=True), Team.Blue)
+
+
+    def add_states(self, state, player_team):
+        our_players, opp_players = du.get_players(state, player_team)
+
+        our_players.sort(key=lambda p: (p.disc.x, p.disc.y))
+        opp_players.sort(key=lambda p: (p.disc.x, p.disc.y))
+
+        inputs = []
+        outputs = []
+
+        # Add player team data to sample
+        for player in our_players:
+            inputs.extend([player.disc.x, player.disc.y, player.disc.vx, player.disc.vy])
+
+        # Add opponent team data to sample
+        for player in opp_players:
+            inputs.extend([player.disc.x, player.disc.y, player.disc.vx, player.disc.vy])
+
+        # Add ball data to sample
+        inputs.extend([state.ball.x, state.ball.y, state.ball.vx, state.ball.vy])
+
+        for player in our_players:
+            outputs.extend([*player.input])
+
+        self.game_states.append(
+            {
+                "inputs": inputs,
+                "outputs": outputs
+            }
+        )
 
     def __len__(self):
         return len(self.game_states)
@@ -35,29 +78,8 @@ class Basic3v3(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        state = self.game_states[idx]
+        nn_inputs = torch.tensor(self.game_states[idx]["inputs"])
 
-        our_players = state.players[:3]
-        opp_players = state.players[3:]
-
-        our_players.sort(key=lambda p: (p.disc.x, p.disc.y))
-        opp_players.sort(key=lambda p: (p.disc.x, p.disc.y))
-
-        nn_inputs = []
-        nn_outputs = []
-
-        # Add player data to sample
-        for player in our_players + opp_players:
-            nn_inputs.extend([player.disc.x, player.disc.y, player.disc.vx, player.disc.vy])
-
-        # Add ball data to sample
-        nn_inputs.extend([state.ball.x, state.ball.y, state.ball.vx, state.ball.vy])
-
-        nn_inputs = torch.tensor(nn_inputs)
-
-        for player in our_players:
-            nn_outputs.extend([*player.input])
-
-        nn_outputs = torch.tensor(nn_outputs)       
+        nn_outputs = torch.tensor(self.game_states[idx]["outputs"])      
 
         return nn_inputs.float(), nn_outputs.float()

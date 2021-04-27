@@ -48,7 +48,7 @@ class Basic3v3DC(Dataset):
                         
 
     def add_states(self, state, player_team):
-        our_players, opp_players = self.get_players(state, player_team)
+        our_players, opp_players = du.get_players(state, player_team)
 
         our_players.sort(key=lambda p: (p.disc.x, p.disc.y))
         opp_players.sort(key=lambda p: (p.disc.x, p.disc.y))
@@ -80,17 +80,6 @@ class Basic3v3DC(Dataset):
                     "outputs": outputs
                 }
             )
-
-
-    def get_players(self, state, player_team):
-        our_team = []
-        opp_team = []
-        for i in range(len(state.players)):
-            if state.players[i].team == player_team:
-                our_team.append(state.players[i])
-            else:
-                opp_team.append(state.players[i])
-        return (our_team, opp_team)
 
     def __len__(self):
         return len(self.game_states)
