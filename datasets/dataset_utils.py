@@ -1,4 +1,5 @@
 import copy
+import random
 from replay import Replay, State, Input
 
 def filter_states(game_states):
@@ -38,6 +39,17 @@ def filter_states(game_states):
 
     return processed_states
 
+
+def filter_states_3v3DC(game_states):
+    processed_states = []
+    for state_dict in game_states:
+        if True in state_dict['outputs']:
+            processed_states.append(state_dict)
+
+    return processed_states
+
+
+
 def get_players(state, player_team):
     our_team = []
     opp_team = []
@@ -55,16 +67,16 @@ def get_players(state, player_team):
 #   Rotating about x axis doesn't change direction of play, but helps to explore state space.
 #   Flipping state can produce the same state, if all positon/velocity/actions
 #       aren't on a flipped axis.
-def flip_state(state, flip_x=True, flip_y=True):
+def flip_state(state, x_axis_flip=True, y_axis_flip=True):
     temp = copy.deepcopy(state)
-    temp = flip_state_positions(temp, flip_x=flip_x, flip_y=flip_y)
-    temp = flip_state_actions(temp, flip_x=flip_x, flip_y=flip_y)
+    temp = flip_state_positions(temp, x_axis_flip=x_axis_flip, y_axis_flip=y_axis_flip)
+    temp = flip_state_actions(temp, x_axis_flip=x_axis_flip, y_axis_flip=y_axis_flip)
     return temp
 
-def flip_state_positions(state, flip_x=True, flip_y=True):
-    # flips the axis if the correspong axis flip is True, otherwise stays the 
-    x_mult = -1 if flip_x else 1
-    y_mult = -1 if flip_y else 1
+def flip_state_positions(state, x_axis_flip=True, y_axis_flip=True):
+    # changes variable is other variable axis flip is True, otherwise stays the same
+    x_mult = -1 if y_axis_flip else 1
+    y_mult = -1 if x_axis_flip else 1
     for i in range(len(state.players)):
         state.players[i].disc.x *= x_mult
         state.players[i].disc.y *= y_mult
@@ -78,20 +90,35 @@ def flip_state_positions(state, flip_x=True, flip_y=True):
 
     return state
 
-def flip_state_actions(state, flip_x=True, flip_y=True):
+def flip_state_actions(state, x_axis_flip=True, y_axis_flip=True):
     for i in range(len(state.players)):
         inp = state.players[i].input
-        if inp == Input.Up and flip_y:
+        if inp == Input.Up and x_axis_flip:
             state.players[i].input = Input.Down
-        elif inp == Input.Down and flip_y:
+        elif inp == Input.Down and x_axis_flip:
             state.players[i].input = Input.Up
 
-        if inp == Input.Left and flip_x:
+        if inp == Input.Left and y_axis_flip:
             state.players[i].input = Input.Right
-        elif inp == Input.Right and flip_x:
+        elif inp == Input.Right and y_axis_flip:
             state.players[i].input = Input.Left
 
     return state
+
+
+def flip_action_list(al, x_axis_flip=True, y_axis_flip=True):
+    for idx in range(len(al)):
+        inp = al[idx]
+        if inp == Input.Up and x_axis_flip:
+            al[idx] = Input.Down
+        elif inp == Input.Down and x_axis_flip:
+            al[idx] = Input.Up
+
+        if inp == Input.Left and y_axis_flip:
+            al[idx] = Input.Right
+        elif inp == Input.Right and y_axis_flip:
+            al[idx] = Input.Left
+    return al
 
 
 

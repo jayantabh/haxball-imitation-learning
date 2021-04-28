@@ -32,14 +32,13 @@ class Basic3v3(Dataset):
                                 self.add_states(state, Team.Red)
 
                                 # add state flipped about x axis, team red
-                                self.add_states(du.flip_state(state, flip_x=True, flip_y=False), Team.Red)
+                                self.add_states(du.flip_state(state, x_axis_flip=True, y_axis_flip=False), Team.Red)
 
                                 # add state flipped about y axis, team blue
-                                self.add_states(du.flip_state(state, flip_x=False, flip_y=True), Team.Blue)
+                                self.add_states(du.flip_state(state, x_axis_flip=False, y_axis_flip=True), Team.Blue)
 
                                 # add state flipped about x and y axis, team blue
-                                self.add_states(du.flip_state(state, flip_x=True, flip_y=True), Team.Blue)
-
+                                self.add_states(du.flip_state(state, x_axis_flip=True, y_axis_flip=True), Team.Blue)
 
     def add_states(self, state, player_team):
         our_players, opp_players = du.get_players(state, player_team)
