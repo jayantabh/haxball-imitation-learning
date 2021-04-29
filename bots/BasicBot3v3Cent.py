@@ -19,8 +19,6 @@ class BasicBot3v3Cent(interactive.Interactive):
         self.model.eval()
         self.last_inputs = []
         self.tick = 0
-        self.follow = 0
-        self.fa = 0
 
     def onUpdate(self):
         self.tick += 1
@@ -75,10 +73,6 @@ class BasicBot3v3Cent(interactive.Interactive):
             # print(inputs)
             if len(inputs) < 1:
                 inputs = self.to_ball()
-                self.follow += 1
-
-            self.fa += 1
-            print(self.follow / self.fa)
             
             self.last_inputs = inputs
             # print(inputs)
