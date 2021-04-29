@@ -70,20 +70,18 @@ class BasicBot3v3DC(interactive.Interactive):
             # get output for model
             actions = self.model(state_tensor)
             # print(actions)
-            actions = (actions > 0.5).tolist()
+            player_actions = (actions > 0.5).tolist()
             # print(actions)
-
-            player_actions = actions[player_idx * num_actions: (player_idx + 1) * num_actions]
 
             # send input actions
             inputs = [replay.Input(1 << idx) for idx, x in enumerate(player_actions) if x != 0]
             if self.player.team == Team.Blue:
                 inputs = du.flip_action_list(al=inputs, x_axis_flip=False, y_axis_flip=True)
 
-            if len(inputs) > 0:
-                self.last_inputs = inputs
-            else:
-                self.last_inputs = self.to_ball()
+            if len(inputs) < 1:
+                inputs = self.to_ball()
+            
+            self.last_inputs = inputs
 
             self.setInput(*inputs)
         elif self.player and len(self.game.players) == 6:

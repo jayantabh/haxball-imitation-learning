@@ -1,28 +1,44 @@
 import replay
 import torch
 import os
+import datasets.dataset_utils as du
 
 from bots import interactive
 from models import Basic3v3
+from replay import Team, Input
 
 
 class BasicBot3v3Cent(interactive.Interactive):
-    def __init__(self, channel_id):
+    def __init__(self, channel_id, name):
         super().__init__(channel_id)
 
         # Load pre-trained model and set-up the bot
         self.model = Basic3v3.Basic3v3()
+        path = os.path.join(os.getcwd(), 'saved_models', name)
+        self.model.load_state_dict(torch.load(path))
+        self.model.eval()
+        self.last_inputs = []
+        self.tick = 0
+        self.follow = 0
+        self.fa = 0
 
     def onUpdate(self):
-        if self.player and len(self.game.players) == 6:
+        self.tick += 1
+        if self.player and len(self.game.players) == 6 and self.tick % 3 == 0:
             # convert game state to tensor
             # tensor must be same format as how network was trained
             num_actions = 5
             our_team = self.player.team
 
+            game_state = self.game
+
+            # flip incoming states if on opposite side
+            if self.player.team == Team.Blue:
+                game_state = du.flip_state(game_state, x_axis_flip=False, y_axis_flip=True)
+
             # forming input only works for two players currently
-            our_players = [p for p in self.game.players if p.team == our_team]
-            opp_players = [p for p in self.game.players if p.team != our_team]
+            our_players = [p for p in game_state.players if p.team == our_team]
+            opp_players = [p for p in game_state.players if p.team != our_team]
 
             our_players.sort(key=lambda p: (p.disc.x, p.disc.y))
             opp_players.sort(key=lambda p: (p.disc.x, p.disc.y))
@@ -40,7 +56,7 @@ class BasicBot3v3Cent(interactive.Interactive):
             for player in opp_players:
                 state.extend([player.disc.x, player.disc.y, player.disc.vx, player.disc.vy])
 
-            state.extend([self.game.ball.x, self.game.ball.y, self.game.ball.vx, self.game.ball.vy])
+            state.extend([game_state.ball.x, game_state.ball.y, game_state.ball.vx, game_state.ball.vy])
 
             state_tensor = torch.tensor(state)
 
@@ -49,7 +65,41 @@ class BasicBot3v3Cent(interactive.Interactive):
             actions = (actions > 0.5).tolist()
 
             player_actions = actions[player_idx * num_actions: (player_idx + 1) * num_actions]
+            # print(player_actions)
 
             # send input actions
             inputs = [replay.Input(1 << idx) for idx, x in enumerate(player_actions) if x != 0]
+            if self.player.team == Team.Blue:
+                inputs = du.flip_action_list(al=inputs, x_axis_flip=False, y_axis_flip=True)
+
+            # print(inputs)
+            if len(inputs) < 1:
+                inputs = self.to_ball()
+                self.follow += 1
+
+            self.fa += 1
+            print(self.follow / self.fa)
+            
+            self.last_inputs = inputs
+            # print(inputs)
+            # print('------------')
+
             self.setInput(*inputs)
+        elif self.player and len(self.game.players) == 6:
+            self.setInput(*self.last_inputs)
+
+
+    def to_ball(self):
+        t = 15
+        px = self.player.disc.x
+        py = self.player.disc.y
+
+        bx = self.game.ball.x
+        by = self.game.ball.y
+
+        inputs = []
+        if abs(px - bx) > t:
+            inputs.append(Input.Right if px < bx else Input.Left)
+        if abs(py - by) > t:
+            inputs.append(Input.Down if py < by else Input.Up)
+        return inputs
