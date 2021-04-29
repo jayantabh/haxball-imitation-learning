@@ -22,7 +22,7 @@ class BasicBot3v3DC(interactive.Interactive):
 
     def onUpdate(self):
         self.tick += 1
-        if self.player and len(self.game.players) == 6 and self.tick % 3 == 0:
+        if self.player and len(self.game.players) == 6 and self.tick % 2 == 0:
             # convert game state to tensor
             # tensor must be same format as how network was trained
             num_actions = 5
@@ -85,7 +85,7 @@ class BasicBot3v3DC(interactive.Interactive):
 
             self.setInput(*inputs)
         elif self.player and len(self.game.players) == 6:
-            self.setInput(*self.last_inputs)
+            self.setInput(*self.to_ball())
 
     def to_ball(self):
         t = 15

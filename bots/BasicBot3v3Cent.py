@@ -86,7 +86,7 @@ class BasicBot3v3Cent(interactive.Interactive):
 
             self.setInput(*inputs)
         elif self.player and len(self.game.players) == 6:
-            self.setInput(*self.last_inputs)
+            self.setInput(*self.to_ball())
 
 
     def to_ball(self):
