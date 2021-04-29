@@ -43,7 +43,7 @@ class Basic3v3(Dataset):
                                 self.add_states(du.flip_state(state, x_axis_flip=True, y_axis_flip=True), Team.Blue)
 
         self.game_states = du.filter_states_3v3(game_states=self.game_states)
-        self.game_states = du.add_nearby_states_3v3(game_states=self.game_states)
+        # self.game_states = du.add_nearby_states_3v3(game_states=self.game_states)
 
     def add_states(self, state, player_team):
         our_players, opp_players = du.get_players(state, player_team)

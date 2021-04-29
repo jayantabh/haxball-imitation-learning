@@ -119,8 +119,8 @@ def slant_lr(optimizer, epoch, max_epoch, base_lr):
 def main(model, dataset, saved_model_path):
     train_dataset, test_dataset = random_split(dataset, [len(dataset) - len(dataset)//10, len(dataset)//10])
 
-    train_loader = DataLoader(train_dataset, shuffle=True, batch_size=512)
-    test_loader = DataLoader(test_dataset, shuffle=False, batch_size=512)
+    train_loader = DataLoader(train_dataset, shuffle=True, batch_size=128)
+    test_loader = DataLoader(test_dataset, shuffle=False, batch_size=128)
 
     print(model)
 
@@ -134,13 +134,13 @@ def main(model, dataset, saved_model_path):
 
     # for 200 epochs
     learning_rate = 1e-4
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.0005)
     best = 0.0
     best_model = None
 
     acc = validate(0, test_loader, model, criterion)
 
-    epochs = 30
+    epochs = 50
     for epoch in range(epochs):
         # train loop
         train(epoch, train_loader, model, optimizer, criterion)
