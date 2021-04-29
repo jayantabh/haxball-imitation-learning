@@ -106,24 +106,21 @@ def validate(epoch, val_loader, model, criterion):
     return acc.avg
 
 
-def adjust_learning_rate(optimizer, epoch, args):
-    epoch += 1
-    if epoch <= args.warmup:
-        lr = args.learning_rate * epoch / args.warmup
-    elif epoch > args.steps[1]:
-        lr = args.learning_rate * 0.01
-    elif epoch > args.steps[0]:
-        lr = args.learning_rate * 0.1
+def slant_lr(optimizer, epoch, max_epoch, base_lr):
+    tp = 0.25
+    if epoch <= max_epoch * tp:
+        lr = base_lr * (1 + 0.1 * epoch)
     else:
-        lr = args.learning_rate
+        lr = base_lr * (1 + 0.1 * max_epoch * tp) * (0.985**((epoch - max_epoch * tp)))
+
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
 def main(model, dataset, saved_model_path):
     train_dataset, test_dataset = random_split(dataset, [len(dataset) - len(dataset)//10, len(dataset)//10])
 
-    train_loader = DataLoader(train_dataset, shuffle=True)
-    test_loader = DataLoader(test_dataset, shuffle=False)
+    train_loader = DataLoader(train_dataset, shuffle=True, batch_size=75)
+    test_loader = DataLoader(test_dataset, shuffle=False, batch_size=75)
 
     print(model)
 
@@ -132,6 +129,10 @@ def main(model, dataset, saved_model_path):
 
     criterion = nn.BCELoss()
 
+    # for 100 epochs
+    # learning_rate = 1e-4
+
+    # for 200 epochs
     learning_rate = 1e-4
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     best = 0.0
@@ -139,7 +140,7 @@ def main(model, dataset, saved_model_path):
 
     acc = validate(0, test_loader, model, criterion)
 
-    epochs = 10
+    epochs = 125
     for epoch in range(epochs):
         # train loop
         train(epoch, train_loader, model, optimizer, criterion)
@@ -152,6 +153,8 @@ def main(model, dataset, saved_model_path):
             best_model = copy.deepcopy(model)
             torch.save(best_model.state_dict(), saved_model_path)
 
+        slant_lr(optimizer=optimizer, epoch=epoch, max_epoch=epochs, base_lr=learning_rate)
+
     print('Best Prec Acccuracy: {:.4f}'.format(best))
 
 
@@ -160,8 +163,10 @@ import os
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str, default=0, help="Must specify --dataset type", required=True)
+    parser.add_argument("--dataset_path", type=str, default=0, help="Must specify --dataset_path type", required=True)
     parser.add_argument("--model", type=str, help="Must specify --model", required=True)
     parser.add_argument("--name", type=str, help="Must specify saved model name", required=True)
+
     args = parser.parse_args()
 
     saved_model_path = os.path.join( os.getcwd(), 'saved_models', args.name)
@@ -181,15 +186,15 @@ if __name__ == '__main__':
 
     if args.dataset == "BasicFiltered":
         from datasets.BasicFilteredDataset import BasicFilteredDataset
-        my_dataset = BasicFilteredDataset("sample_preprocessed")
+        my_dataset = BasicFilteredDataset(args.dataset_path)
     elif args.dataset == "DistBot":
         from datasets.DistDataset import DistDataset
-        my_dataset = DistDataset("sample_preprocessed")
+        my_dataset = DistDataset(args.dataset_path)
     elif args.dataset == "Basic3v3":
         from datasets.Basic3v3 import Basic3v3
-        my_dataset = Basic3v3("sample_preprocessed")
+        my_dataset = Basic3v3(args.dataset_path)
     elif args.dataset == "Basic3v3DC":
         from datasets.Basic3v3DC import Basic3v3DC
-        my_dataset = Basic3v3DC("sample_preprocessed")
+        my_dataset = Basic3v3DC(args.dataset_path)
 
     main(model, my_dataset, saved_model_path)

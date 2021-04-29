@@ -18,5 +18,8 @@ if __name__ == '__main__':
         elif args.bot == "Basic3v3DC":
             from bots.BasicBot3v3DC import BasicBot3v3DC
             async_common.run(BasicBot3v3DC(str(args.channel), args.name).play())
+        elif args.bot == "GoTowardsBot3v3":
+            from bots.GoTowardsBot3v3 import GoTowardsBot3v3
+            async_common.run(GoTowardsBot3v3(str(args.channel)).play())
     except KeyboardInterrupt:
         pass

@@ -67,11 +67,11 @@ def convert_all(replays_path: str):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", type=str, default="replays/Good3v3s",
+    parser.add_argument("--path", type=str, default="replays/VeryGood3v3",
                         help="Folder with replays.")
     args = parser.parse_args()
 
-    PREPROCESSED_PATH = "preprocessed/"
+    PREPROCESSED_PATH = "very_good_3v3/"
     os.makedirs(PREPROCESSED_PATH, exist_ok=True)
 
     print("Starting to convert...")

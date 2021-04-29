@@ -13,13 +13,15 @@ class BasicBot(interactive.Interactive):
     # Load pre-trained model and set-up the bot
     self.model = BasicModel()
     path = os.path.join( os.getcwd(), 'saved_models', name )
-    self.model.load_state_dict(torch.load(path))
+    self.model.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
     self.model.eval()
 
   def onUpdate(self):
     if self.player and len(self.game.players) == 2:
       # convert game state to tensor
       # tensor must be same format as how network was trained
+
+      print(self.player.team)
 
       # forming input only works for two players currently
       state = [self.player.disc.x, self.player.disc.y, self.player.disc.vx, self.player.disc.vy]
