@@ -34,6 +34,9 @@ class Basic3v3DC(Dataset):
                         if len(state.players) != 6:
                             continue
 
+                        if state.state != State.Game:
+                            continue
+
                         # add default state, team red
                         self.add_states(state, Team.Red)
 
@@ -46,7 +49,8 @@ class Basic3v3DC(Dataset):
                         # add state flipped about x and y axis, team blue
                         self.add_states(du.flip_state(state, x_axis_flip=True, y_axis_flip=True), Team.Blue)
 
-        self.game_states = du.filter_states_3v3DC(game_states=self.game_states)
+        self.game_states = du.filter_states_3v3(game_states=self.game_states)
+        self.game_states = du.add_nearby_states_3v3(game_states=self.game_states)
                         
 
     def add_states(self, state, player_team):

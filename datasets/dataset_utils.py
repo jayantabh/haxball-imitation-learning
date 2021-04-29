@@ -41,7 +41,7 @@ def filter_states(game_states):
     return processed_states
 
 
-def filter_states_3v3DC(game_states):
+def filter_states_3v3(game_states):
     processed_states = []
     for state_dict in game_states:
         if True in state_dict['outputs']:
@@ -123,19 +123,19 @@ def flip_action_list(al, x_axis_flip=True, y_axis_flip=True):
 
 
 def add_nearby_states_3v3(game_states):
-    num_add_states = 10
+    num_add_states = 4
     processed_states = []
 
-    for i in range(game_states):
-        input = game_states[i]['input']
-        output = game_states[i]['output']
+    for i in range(len(game_states)):
+        input = game_states[i]['inputs']
+        output = game_states[i]['outputs']
 
         new_input = input.copy()
 
         processed_states.append(
             {
-                'input': input.copy(),
-                'output': output.copy()
+                'inputs': input.copy(),
+                'outputs': output.copy()
             }
         )
 
@@ -151,8 +151,8 @@ def add_nearby_states_3v3(game_states):
 
             processed_states.append(
                 {
-                    'input': new_input,
-                    'output': output.copy()
+                    'inputs': new_input,
+                    'outputs': output.copy()
                 }
             )
 
