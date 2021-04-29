@@ -140,7 +140,7 @@ def main(model, dataset, saved_model_path):
 
     acc = validate(0, test_loader, model, criterion)
 
-    epochs = 50
+    epochs = 100
     for epoch in range(epochs):
         # train loop
         train(epoch, train_loader, model, optimizer, criterion)
