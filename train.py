@@ -119,8 +119,8 @@ def slant_lr(optimizer, epoch, max_epoch, base_lr):
 def main(model, dataset, saved_model_path):
     train_dataset, test_dataset = random_split(dataset, [len(dataset) - len(dataset)//10, len(dataset)//10])
 
-    train_loader = DataLoader(train_dataset, shuffle=True, batch_size=75)
-    test_loader = DataLoader(test_dataset, shuffle=False, batch_size=75)
+    train_loader = DataLoader(train_dataset, shuffle=True, batch_size=512)
+    test_loader = DataLoader(test_dataset, shuffle=False, batch_size=512)
 
     print(model)
 
@@ -140,7 +140,7 @@ def main(model, dataset, saved_model_path):
 
     acc = validate(0, test_loader, model, criterion)
 
-    epochs = 125
+    epochs = 30
     for epoch in range(epochs):
         # train loop
         train(epoch, train_loader, model, optimizer, criterion)
