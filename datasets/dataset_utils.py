@@ -1,6 +1,7 @@
 import copy
 import random
 from replay import Replay, State, Input
+from datasets.constants import *
 
 def filter_states(game_states):
     processed_states = []
@@ -121,6 +122,41 @@ def flip_action_list(al, x_axis_flip=True, y_axis_flip=True):
     return al
 
 
+def add_nearby_states_3v3(game_states):
+    num_add_states = 10
+    processed_states = []
+
+    for i in range(game_states):
+        input = game_states[i]['input']
+        output = game_states[i]['output']
+
+        new_input = input.copy()
+
+        processed_states.append(
+            {
+                'input': input.copy(),
+                'output': output.copy()
+            }
+        )
+
+        for j in range(num_add_states):
+            x_idx = (0, 4, 8, 12, 16, 20, 24)
+            y_idx = (1, 5, 9, 13, 17, 21, 25)
+
+            for x_ in x_idx:
+                new_input[x_] = min(max(input[x_] + random.uniform(-5, 5), X_RANGE_BIG["min"]), X_RANGE_BIG["max"])
+
+            for y_ in y_idx:
+                new_input[y_] = min(max(input[y_] + random.uniform(-3, 3), Y_RANGE_BIG["min"]), Y_RANGE_BIG["max"])
+
+            processed_states.append(
+                {
+                    'input': new_input,
+                    'output': output.copy()
+                }
+            )
+
+    return processed_states
 
 
 
